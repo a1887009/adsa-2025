@@ -3,13 +3,17 @@
 #include <vector>
 #include <algorithm>
 
+typedef unsigned int digit;
+typedef std::vector<digit> integer;
+unsigned int BASE{10};
+
 /* 
  * Reverses the string and puts it to a vector 
  * for better use, ie. vector[0] is now lowest digit
  */
-std::vector<int> parseVector(const std::string& numStr)
+integer parseVector(const std::string& numStr)
 {
-    std::vector<int> digits;
+    integer digits;
     for (int i = numStr.length() - 1; i >=0; i--)
     {
         digits.push_back(numStr[i] - '0');
@@ -17,7 +21,11 @@ std::vector<int> parseVector(const std::string& numStr)
     return digits;
 }
 
-std::string parseString(const std::vector<int>& numVec)
+/* 
+ * Reverses the vector and puts it back to a string 
+ * for delivery back to the user after functions have run
+ */
+std::string parseString(const integer& numVec)
 {
     std::string digits;
     for (int i = numVec.size() - 1; i >=0; i--)
@@ -27,37 +35,53 @@ std::string parseString(const std::vector<int>& numVec)
     return digits;
 }
 
-// i1, i2 are integers and b is the base
-std::string add(const std::string& i1, const std::string& i2, int base)
+// Adds 0's to the smaller vector to compensate 
+void padVectors(integer& v1, integer& v2) 
 {
-    std::vector<int> v1 = parseVector(i1);
-    std::vector<int> v2 = parseVector(i2);
-    std::vector<int> result;
-    int n1 = v1.size();
-    int n2 = v2.size();
+    while (v1.size() < v2.size()) v1.push_back(0);
+    while (v2.size() < v1.size()) v2.push_back(0);
+}
 
-    int carry{0};
-    for (int i = 0; i < std::max(n1, n2); i++)
+integer addVectors(integer v1, integer v2) 
+{
+    // Apply padding to ensure they have same size
+    padVectors(v1, v2);
+    integer result;
+    digit carry = 0;
+
+    // Main addition loop
+    int n = v1.size();
+    for (int i = 0; i < n; i++)
     {
-        int d1 = (i < n1) ? v1[i] : 0;
-        int d2 = (i < n2) ? v2[i] : 0;
-
-        int temp = d1 + d2 + carry;
-        result.push_back(temp % base);
-        carry = temp / base;
+        digit sum = v1[i] + v2[i] + carry;
+        result.push_back(sum % BASE);
+        carry = sum / BASE;
     }
-    if (carry > 0) {result.push_back(carry);}
 
+    // Add leftover carry
+    if (carry) result.push_back(carry);
+    return result;
+}
+
+// i1, i2 are integers and b is the base
+std::string add(const std::string& i1, const std::string& i2)
+{
+    // Initialise the vectors ready for computation
+    integer v1 = parseVector(i1);
+    integer v2 = parseVector(i2);
+
+    // Pass the addition of the two vectors to the result
+    integer result = addVectors(v1, v2);
     return parseString(result);
 }
+
 
 
 int main()
 {
     std::string num1;
     std::string num2;
-    int base;
-    std::cin >> num1 >> num2 >> base;
-    std::cout << add(num1, num2, base) << '\n';
+    std::cin >> num1 >> num2 >> BASE;
+    std::cout << add(num1, num2) << '\n';
     return 0;
 }
